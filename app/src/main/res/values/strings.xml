@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">NFCGate</string>
+    <string name="app_name">Цезарь</string>
     <string name="xposed_desc">Modules for NFCGate code hooks</string>
     <string name="about_license">Apache License v2.0</string>
     <string name="about_text">
