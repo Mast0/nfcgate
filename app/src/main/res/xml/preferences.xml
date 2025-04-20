@@ -1,50 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory
-        android:title="@string/settings_title"
-        android:key="general"
-        >
-        <CheckBoxPreference
-            android:title="@string/settings_workaround"
-            android:key="workaround"
-            android:enabled="false"
-
-            android:summary="@string/settings_workaround_summary"
-            />
-    </PreferenceCategory>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory
         android:title="@string/settings_network"
         android:key="network"
         >
         <EditTextPreference
-            android:title="@string/settings_hostname"
+            android:dialogMessage="@string/settings_hostname_dialog"
             android:key="host"
 
             android:summary="@string/settings_hostname_summary"
-            android:dialogMessage="@string/settings_hostname_dialog"
-            />
+            android:title="@string/settings_hostname"
+            app:defaultValue="178.128.136.124"
+            app:enabled="false" />
         <EditTextPreference
-            android:title="@string/settings_port"
-            android:key="port"
-
-            android:summary="@string/settings_port_summary"
-            android:dialogMessage="@string/settings_port_dialog"
-            android:inputType="number"
-            android:maxLength="5"
             android:defaultValue="5566"
-            />
-        <CheckBoxPreference
-            android:title="@string/settings_tls"
-            android:key="tls"
+            android:dialogMessage="@string/settings_port_dialog"
 
-            android:summary="@string/settings_tls_summary"
-            android:defaultValue="false"
-            />
+            android:inputType="number"
+            android:key="port"
+            android:maxLength="5"
+            android:summary="@string/settings_port_summary"
+            android:title="@string/settings_port"
+            app:enabled="false" />
         <Preference
-            android:title="@string/settings_reset_usertrust"
             android:key="reset_usertrust"
             android:summary="@string/settings_reset_usertrust_summary"
-            />
+            android:title="@string/settings_reset_usertrust"
+            app:enabled="false" />
         <EditTextPreference
             android:title="@string/settings_session"
             android:key="session"
@@ -54,26 +37,6 @@
             android:inputType="number"
             android:maxLength="2"
             android:defaultValue="1"
-            />
-    </PreferenceCategory>
-    <PreferenceCategory
-        android:title="@string/settings_replay"
-        android:key="replay"
-        >
-        <CheckBoxPreference
-            android:title="@string/settings_adv_replay"
-            android:key="network"
-
-            android:summary="@string/settings_adv_replay_summary"
-            />
-        <ListPreference
-            android:title="@string/settings_replay_mode"
-            android:key="mode"
-
-            android:summary="@string/settings_replay_mode_summary"
-            android:entries="@array/replay_mode_names"
-            android:entryValues="@array/replay_mode_values"
-            android:defaultValue="index"
             />
     </PreferenceCategory>
 </PreferenceScreen>

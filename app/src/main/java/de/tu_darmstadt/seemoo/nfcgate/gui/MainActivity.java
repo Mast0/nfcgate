@@ -25,13 +25,8 @@ import de.tu_darmstadt.seemoo.nfcgate.R;
 import de.tu_darmstadt.seemoo.nfcgate.db.SessionLog;
 import de.tu_darmstadt.seemoo.nfcgate.db.pcapng.ISO14443Stream;
 import de.tu_darmstadt.seemoo.nfcgate.db.worker.LogInserter;
-import de.tu_darmstadt.seemoo.nfcgate.gui.fragment.AboutFragment;
-import de.tu_darmstadt.seemoo.nfcgate.gui.fragment.CaptureFragment;
-import de.tu_darmstadt.seemoo.nfcgate.gui.fragment.CloneFragment;
 import de.tu_darmstadt.seemoo.nfcgate.gui.fragment.StatusFragment;
-import de.tu_darmstadt.seemoo.nfcgate.gui.log.LoggingFragment;
 import de.tu_darmstadt.seemoo.nfcgate.gui.fragment.RelayFragment;
-import de.tu_darmstadt.seemoo.nfcgate.gui.fragment.ReplayFragment;
 import de.tu_darmstadt.seemoo.nfcgate.gui.fragment.SettingsFragment;
 import de.tu_darmstadt.seemoo.nfcgate.network.UserTrustManager;
 import de.tu_darmstadt.seemoo.nfcgate.nfc.NfcManager;
@@ -91,10 +86,6 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-        // initially select clone mode
-        mNavbar.setCheckedItem(R.id.nav_clone);
-        mNavbar.getMenu().performIdentifierAction(R.id.nav_clone, 0);
-
         // NFC setup
         mNfc = new NfcManager(this);
         if (!mNfc.hasNfc() || !mNfc.isEnabled())
@@ -151,22 +142,12 @@ public class MainActivity extends AppCompatActivity {
      * Returns a Fragment for every navbar action
      */
     private Fragment getFragmentByAction(int id) {
-        if (R.id.nav_clone == id) {
-            return new CloneFragment();
-        } else if (R.id.nav_relay == id) {
+        if (R.id.nav_relay == id) {
             return new RelayFragment();
-        } else if (R.id.nav_replay == id) {
-            return new ReplayFragment();
-        } else if (R.id.nav_capture == id) {
-            return new CaptureFragment();
         } else if (R.id.nav_settings == id) {
             return new SettingsFragment();
         } else if (R.id.nav_status == id) {
             return new StatusFragment();
-        } else if (R.id.nav_about == id) {
-            return new AboutFragment();
-        } else if (R.id.nav_logging == id) {
-            return new LoggingFragment();
         }
 
         throw new IllegalArgumentException("Position out of range");
@@ -211,15 +192,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             Toast.makeText(this, getString(R.string.pcap_error), Toast.LENGTH_SHORT).show();
         }
-    }
-
-    public void importCapture(List<Bundle> capture) {
-        LogInserter inserter = new LogInserter(this, SessionLog.SessionType.CAPTURE, null);
-
-        for (Bundle b : capture)
-            inserter.log(CaptureFragment.fromBundle(b));
-
-        Toast.makeText(this, getString(R.string.pcap_log), Toast.LENGTH_SHORT).show();
     }
 
     @Override

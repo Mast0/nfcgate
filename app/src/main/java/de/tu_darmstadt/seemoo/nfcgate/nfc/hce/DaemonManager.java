@@ -25,9 +25,7 @@ public class DaemonManager {
     public void onResponse(Intent intent) {
         String responseType = intent.getStringExtra("type");
 
-        if ("CAPTURE".equals(responseType))
-            mActivity.importCapture(intent.<Bundle>getParcelableArrayListExtra("capture"));
-        else if ("HOOK_STATUS".equals(responseType)) {
+        if ("HOOK_STATUS".equals(responseType)) {
             mIsHookEnabled = intent.getBooleanExtra("hookEnabled", false);
             mActivity.getNfc().notifyStatusChanged();
             mLastResponse = new Date();
