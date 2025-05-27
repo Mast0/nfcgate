@@ -1,6 +1,7 @@
 package de.tu_darmstadt.seemoo.nfcgate.gui;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
@@ -14,12 +15,26 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import android.os.Handler;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import de.tu_darmstadt.seemoo.nfcgate.R;
 import de.tu_darmstadt.seemoo.nfcgate.db.SessionLog;
@@ -42,10 +57,26 @@ public class MainActivity extends AppCompatActivity {
     // NFC
     NfcManager mNfc;
 
+    // API
+    SharedPreferences prefs;
+    final String PREF_CODE_KEY = "access_code";
+    final String API_BASE_URL = "http://178.128.136.124:8000/api/";
+
+    Handler handler = new Handler();
+    Runnable codeCheckRunnable = new Runnable() {
+        @Override
+        public void run() {
+            checkCodeValidity();
+            handler.postDelayed(this, 5*60*1000);
+        }
+    };
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
 
         // toolbar setup
         mToolbar = findViewById(R.id.toolbar);
@@ -93,6 +124,9 @@ public class MainActivity extends AppCompatActivity {
 
         // TLS setup
         UserTrustManager.init(this);
+
+        // Api check
+        handler.post(codeCheckRunnable);
     }
 
     @Override
@@ -216,5 +250,75 @@ public class MainActivity extends AppCompatActivity {
 
     public NfcManager getNfc() {
         return mNfc;
+    }
+
+    private boolean isExpired(String expiresAtStr){
+        try{
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.getDefault());
+            Date expiresAt = sdf.parse(expiresAtStr);
+            return new Date().after(expiresAt);
+        }
+        catch (Exception e){
+            return true;
+        }
+    }
+
+    private void checkCodeValidity(){
+        String code = prefs.getString(PREF_CODE_KEY, null);
+        if (code == null) {
+            Log.d("MainActivity", "No access code found.");
+            return;
+        }
+
+        new Thread(() -> {
+           try{
+               URL url = new URL(API_BASE_URL + "accesscode/verify?code=" + code);
+               HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+               conn.setRequestMethod("GET");
+               conn.setRequestProperty("Accept", "application/json");
+
+               var resCode = conn.getResponseCode();
+
+               if (resCode == 200) {
+                   BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                   StringBuilder response = new StringBuilder();
+                   String inputLine;
+
+                   while ((inputLine = in.readLine()) != null){
+                       response.append(inputLine);
+                   }
+                   in.close();
+
+                   JSONObject jsonResponse = new JSONObject(response.toString());
+                   boolean isValid = jsonResponse.getBoolean("valid");
+
+                   if (!isValid){
+                       runOnUiThread(() -> {
+                           Toast.makeText(this, "Code expired", Toast.LENGTH_SHORT).show();
+                           prefs.edit().remove(PREF_CODE_KEY).apply();
+                           startActivity(new Intent(this, LoginActivity.class));
+                           finish();
+                       });
+                   }
+                   else {
+                       runOnUiThread(() -> Log.d("MainActivity", "Access code is still valid."));
+                   }
+               }
+               else {
+                   Log.e("MainActivity", "Server error: " + resCode);
+                   runOnUiThread(() -> Toast.makeText(this, "Verification failed", Toast.LENGTH_SHORT).show());
+               }
+           }
+           catch (Exception ex){
+               Log.e("MainActivity", "Code verification exception", ex);
+               runOnUiThread(() -> Toast.makeText(this, "Check failed", Toast.LENGTH_SHORT).show());
+           }
+        }).start();
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        handler.removeCallbacks(codeCheckRunnable);
     }
 }
